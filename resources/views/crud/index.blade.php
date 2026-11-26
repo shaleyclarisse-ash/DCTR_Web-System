@@ -23,35 +23,37 @@
 @if ($cfg['searchable'])
     <form method="GET" class="search-bar">
         <div class="input-group">
-            <input type="search" name="q" value="{{ $term }}" class="form-control" placeholder="Search {{ strtolower($cfg['title']) }}...">
-            <button class="btn btn-ink"><i class="bi bi-search"></i></button>
+            <label class="visually-hidden" for="record-search">Search {{ strtolower($cfg['title']) }}</label>
+            <input id="record-search" type="search" name="q" value="{{ $term }}" class="form-control" placeholder="Search {{ strtolower($cfg['title']) }}...">
+            <button class="btn btn-ink"><i class="bi bi-search" aria-hidden="true"></i><span class="ms-1">Search</span></button>
         </div>
     </form>
 @endif
 
-<div class="panel table-responsive">
+<p class="small text-secondary mb-2" role="status">{{ $rows->total() }} {{ $rows->total() === 1 ? 'record' : 'records' }}</p>
+<div class="panel table-responsive mobile-card-table">
     <table class="table table-hover">
         <thead>
             <tr>
-                @foreach ($cfg['columns'] as $label => $col)<th>{{ $label }}</th>@endforeach
-                <th class="text-end">Actions</th>
+                @foreach ($cfg['columns'] as $label => $col)<th scope="col">{{ $label }}</th>@endforeach
+                <th scope="col" class="text-end">Actions</th>
             </tr>
         </thead>
         <tbody>
         @forelse ($rows as $row)
             <tr>
-                @foreach ($cfg['columns'] as $col)
-                    <td>{{ $col instanceof \Closure ? $col($row) : data_get($row, $col) }}</td>
+                @foreach ($cfg['columns'] as $label => $col)
+                    <td data-label="{{ $label }}">{{ $col instanceof \Closure ? $col($row) : data_get($row, $col) }}</td>
                 @endforeach
-                <td class="text-end text-nowrap">
+                <td class="text-end text-nowrap actions-cell" aria-label="Actions">
                     @if ($cfg['show'])
-                        <a href="{{ route($cfg['route'].'.show', $row->id) }}" class="btn btn-sm btn-outline-secondary" title="View"><i class="bi bi-eye"></i></a>
+                        <a href="{{ route($cfg['route'].'.show', $row->id) }}" class="btn btn-sm btn-outline-secondary" aria-label="View record {{ $row->id }}" title="View"><i class="bi bi-eye" aria-hidden="true"></i></a>
                     @endif
-                    <a href="{{ route($cfg['route'].'.edit', $row->id) }}" class="btn btn-sm btn-outline-primary" title="Edit"><i class="bi bi-pencil"></i></a>
+                    <a href="{{ route($cfg['route'].'.edit', $row->id) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit record {{ $row->id }}" title="Edit"><i class="bi bi-pencil" aria-hidden="true"></i></a>
                     <form method="POST" action="{{ route($cfg['route'].'.destroy', $row->id) }}" class="d-inline"
                           onsubmit="return confirm('Delete this record? This cannot be undone.')">
                         @csrf @method('DELETE')
-                        <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" aria-label="Delete record {{ $row->id }}" title="Delete"><i class="bi bi-trash" aria-hidden="true"></i></button>
                     </form>
                 </td>
             </tr>

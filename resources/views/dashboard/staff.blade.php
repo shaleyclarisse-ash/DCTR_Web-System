@@ -6,17 +6,36 @@
     $label = fn ($c) => $c->keys()->map(fn ($k) => \Illuminate\Support\Str::headline($k))->values();
 @endphp
 
-<div class="page-head">
+<section class="dashboard-hero" aria-labelledby="dashboard-title">
     <div>
-        <h1>Good day, {{ \Illuminate\Support\Str::before(auth()->user()->name, ' ') }}</h1>
-        <div class="sub">{{ now()->format('l, F j, Y') }} &middot;
-            {{ $d['showShs'] && $d['showDriving'] ? 'Senior High School and Driving School' : ($d['showShs'] ? 'Senior High School' : 'Driving School') }}
-        </div>
+        <div class="dashboard-eyebrow">{{ now()->format('l, F j, Y') }}</div>
+        <h1 id="dashboard-title">Good day, {{ \Illuminate\Support\Str::before(auth()->user()->name, ' ') }}</h1>
+        <p>Here’s your {{ $d['showShs'] && $d['showDriving'] ? 'school operations' : ($d['showShs'] ? 'Senior High School' : 'Driving School') }} overview.</p>
     </div>
-</div>
+    <div class="dashboard-hero-mark" aria-hidden="true"><i class="bi bi-speedometer2"></i></div>
+</section>
+
+<section class="dashboard-quick" aria-labelledby="quick-actions-title">
+    <div class="dashboard-section-head"><div><h2 id="quick-actions-title">Quick actions</h2><p>Go straight to a common task</p></div></div>
+    <nav class="dashboard-actions" aria-label="Common tasks">
+        @if ($d['showShs'])
+            <a class="dashboard-action action-shs" href="{{ route('students.index') }}"><span class="action-icon"><i class="bi bi-people" aria-hidden="true"></i></span><span><strong>Students</strong><small>Profiles and records</small></span><i class="bi bi-arrow-up-right action-arrow" aria-hidden="true"></i></a>
+            <a class="dashboard-action action-shs" href="{{ route('enrollments.index') }}"><span class="action-icon"><i class="bi bi-journal-check" aria-hidden="true"></i></span><span><strong>Enrollments</strong><small>Manage school enrollment</small></span><i class="bi bi-arrow-up-right action-arrow" aria-hidden="true"></i></a>
+            <a class="dashboard-action action-shs" href="{{ route('attendance.index') }}"><span class="action-icon"><i class="bi bi-clipboard-check" aria-hidden="true"></i></span><span><strong>Take attendance</strong><small>Mark a class for today</small></span><i class="bi bi-arrow-up-right action-arrow" aria-hidden="true"></i></a>
+        @endif
+        @if ($d['showDriving'])
+            <a class="dashboard-action action-driving" href="{{ route('trainees.index') }}"><span class="action-icon"><i class="bi bi-person-vcard" aria-hidden="true"></i></span><span><strong>Trainees</strong><small>Profiles and course progress</small></span><i class="bi bi-arrow-up-right action-arrow" aria-hidden="true"></i></a>
+            <a class="dashboard-action action-driving" href="{{ route('training-sessions.index') }}"><span class="action-icon"><i class="bi bi-signpost-split" aria-hidden="true"></i></span><span><strong>Training sessions</strong><small>Schedule and record lessons</small></span><i class="bi bi-arrow-up-right action-arrow" aria-hidden="true"></i></a>
+        @endif
+        <a class="dashboard-action action-shared" href="{{ route('payments.index') }}"><span class="action-icon"><i class="bi bi-cash-coin" aria-hidden="true"></i></span><span><strong>Payments</strong><small>Balances and collections</small></span><i class="bi bi-arrow-up-right action-arrow" aria-hidden="true"></i></a>
+        <a class="dashboard-action action-shared" href="{{ route('reports.index') }}"><span class="action-icon"><i class="bi bi-bar-chart-line" aria-hidden="true"></i></span><span><strong>Reports</strong><small>Review and export records</small></span><i class="bi bi-arrow-up-right action-arrow" aria-hidden="true"></i></a>
+    </nav>
+</section>
 
 {{-- ================= key numbers ================= --}}
-<div class="stat-strip">
+<section class="dashboard-metrics" aria-labelledby="metrics-title">
+    <div class="dashboard-section-head"><div><h2 id="metrics-title">At a glance</h2><p>Current totals across your workspace</p></div></div>
+    <div class="stat-strip dashboard-stat-strip">
     @if ($d['showShs'])
         <div class="stat"><div class="num">{{ $d['students'] }}</div><div class="lbl">Active students</div></div>
         <div class="stat"><div class="num">{{ $d['enrolled'] }}</div><div class="lbl">Enrolled this school year</div></div>
@@ -30,16 +49,19 @@
     @endif
     <div class="stat"><div class="num">{{ $peso($d['collected']) }}</div><div class="lbl">Total collected</div></div>
     <div class="stat warn"><div class="num">{{ $peso($d['outstanding']) }}</div><div class="lbl">Outstanding balances ({{ $d['withBalance'] }} accounts)</div></div>
-</div>
+    </div>
+</section>
 
 {{-- ================= analytics ================= --}}
 <div class="row g-3 mb-3">
     @if ($d['showShs'])
+        <div class="col-12"><div class="section-heading department-shs">Senior High School overview</div></div>
         <div class="col-lg-4"><div class="panel panel-pad"><h2>Students per strand</h2><div class="chart-box"><canvas id="cStrand"></canvas></div></div></div>
         <div class="col-lg-4"><div class="panel panel-pad"><h2>Average grade per subject</h2><div class="chart-box"><canvas id="cGrades"></canvas></div></div></div>
         <div class="col-lg-4"><div class="panel panel-pad"><h2>Student attendance</h2><div class="chart-box"><canvas id="cShsAtt"></canvas></div></div></div>
     @endif
     @if ($d['showDriving'])
+        <div class="col-12"><div class="section-heading department-driving">Driving School overview</div></div>
         <div class="col-lg-4"><div class="panel panel-pad"><h2>Enrollments per driving course</h2><div class="chart-box"><canvas id="cCourse"></canvas></div></div></div>
         <div class="col-lg-4"><div class="panel panel-pad"><h2>Training sessions by status</h2><div class="chart-box"><canvas id="cSessions"></canvas></div></div></div>
     @endif

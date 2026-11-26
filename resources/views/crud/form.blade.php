@@ -6,7 +6,7 @@
     <a href="{{ route($cfg['route'].'.index') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back</a>
 </div>
 
-<form method="POST" class="panel panel-pad"
+<form method="POST" class="panel panel-pad crud-form"
       action="{{ $record->exists ? route($cfg['route'].'.update', $record->id) : route($cfg['route'].'.store') }}">
     @csrf
     @if ($record->exists) @method('PUT') @endif
@@ -50,22 +50,22 @@
             @else
                 <label class="form-label" for="{{ $name }}">{{ $f['label'] }}</label>
                 @if ($type === 'select')
-                    <select id="{{ $name }}" name="{{ $name }}" class="form-select @error($name) is-invalid @enderror">
+                    <select id="{{ $name }}" name="{{ $name }}" class="form-select @error($name) is-invalid @enderror" @error($name) aria-invalid="true" aria-describedby="{{ $name }}-error" @enderror>
                         <option value="">{{ $f['blank'] ?? '-- Select --' }}</option>
                         @foreach ($f['options'] as $k => $label)
                             <option value="{{ $k }}" @selected((string) $val === (string) $k)>{{ $label }}</option>
                         @endforeach
                     </select>
                 @elseif ($type === 'textarea')
-                    <textarea id="{{ $name }}" name="{{ $name }}" rows="3" class="form-control @error($name) is-invalid @enderror">{{ $val }}</textarea>
+                    <textarea id="{{ $name }}" name="{{ $name }}" rows="3" class="form-control @error($name) is-invalid @enderror" @error($name) aria-invalid="true" aria-describedby="{{ $name }}-error" @enderror>{{ $val }}</textarea>
                 @else
                     <input id="{{ $name }}" type="{{ $type }}" name="{{ $name }}" value="{{ $val }}"
                            @if (isset($f['step'])) step="{{ $f['step'] }}" @endif
                            @if ($type === 'number') min="0" @endif
-                           class="form-control @error($name) is-invalid @enderror" autocomplete="off">
+                           class="form-control @error($name) is-invalid @enderror" autocomplete="off" @error($name) aria-invalid="true" aria-describedby="{{ $name }}-error" @enderror>
                 @endif
             @endif
-            @error($name)<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+            @error($name)<div id="{{ $name }}-error" class="text-danger small mt-1" role="alert">{{ $message }}</div>@enderror
         </div>
         @endif
     @endforeach

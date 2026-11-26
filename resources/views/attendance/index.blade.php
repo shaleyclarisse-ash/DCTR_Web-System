@@ -5,14 +5,15 @@
 
 <form method="GET" class="panel panel-pad mb-3 row g-2">
     <div class="col-lg-7">
-        <select name="schedule" class="form-select" onchange="this.form.submit()">
+        <label class="form-label" for="attendance-schedule">Class schedule</label>
+        <select id="attendance-schedule" name="schedule" class="form-select" onchange="this.form.submit()">
             <option value="">-- Select class schedule --</option>
             @foreach ($schedules as $id => $label)
                 <option value="{{ $id }}" @selected((string) $scheduleId === (string) $id)>{{ $label }}</option>
             @endforeach
         </select>
     </div>
-    <div class="col-lg-3"><input type="date" name="date" value="{{ $date }}" max="{{ now()->toDateString() }}" class="form-control" onchange="this.form.submit()"></div>
+    <div class="col-lg-3"><label class="form-label" for="attendance-date">Attendance date</label><input id="attendance-date" type="date" name="date" value="{{ $date }}" max="{{ now()->toDateString() }}" class="form-control" onchange="this.form.submit()"></div>
     <div class="col-lg-2"><button class="btn btn-ink w-100">Load</button></div>
 </form>
 
@@ -23,7 +24,7 @@
     <input type="hidden" name="date" value="{{ $date }}">
     <div class="panel table-responsive">
         <table class="table">
-            <thead><tr><th>Student</th><th>Status on {{ \Illuminate\Support\Carbon::parse($date)->format('M d, Y') }}</th></tr></thead>
+            <thead><tr><th scope="col">Student</th><th scope="col">Status on {{ \Illuminate\Support\Carbon::parse($date)->format('M d, Y') }}</th></tr></thead>
             <tbody>
             @foreach ($rows as $e)
                 @php $current = $existing[$e->id] ?? 'present'; @endphp

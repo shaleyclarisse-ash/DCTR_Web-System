@@ -19,14 +19,14 @@
     <input type="hidden" name="class" value="{{ $key }}">
     <div class="panel table-responsive">
         <table class="table">
-            <thead><tr><th>Student</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Final average</th><th>Remarks</th></tr></thead>
+            <thead><tr><th scope="col">Student</th><th scope="col">Q1</th><th scope="col">Q2</th><th scope="col">Q3</th><th scope="col">Q4</th><th scope="col">Final average</th><th scope="col">Remarks</th></tr></thead>
             <tbody>
             @foreach ($rows as $e)
                 <tr data-row>
                     <td>{{ $e->student->full_name }}</td>
                     @foreach ([1, 2, 3, 4] as $p)
                         <td style="width:95px">
-                            <input type="number" step="0.01" min="0" max="100" class="form-control form-control-sm" data-q
+                            <input type="number" step="0.01" min="0" max="100" class="form-control form-control-sm" aria-label="Quarter {{ $p }} grade for {{ $e->student->full_name }}" data-q
                                    name="grades[{{ $e->id }}][{{ $p }}]" value="{{ $grades[$e->id][$p]->grade ?? '' }}">
                         </td>
                     @endforeach

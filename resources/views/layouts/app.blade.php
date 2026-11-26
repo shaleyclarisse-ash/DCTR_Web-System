@@ -15,13 +15,46 @@
     $me   = auth()->user();
     $role = $me->role;
     $portalRoles = ['student', 'trainee', 'teacher', 'instructor'];
+    $routeName = request()->route()?->getName() ?? '';
+    $workspace = match (true) {
+        str_starts_with($routeName, 'students.')
+            || str_starts_with($routeName, 'enrollments.')
+            || str_starts_with($routeName, 'sections.')
+            || str_starts_with($routeName, 'subjects.')
+            || str_starts_with($routeName, 'class-schedules.')
+            || in_array($routeName, ['grades.index', 'grades.store', 'attendance.index', 'attendance.store', 'portal.student', 'portal.teacher'], true) => ['Senior High School', 'department-shs'],
+        str_starts_with($routeName, 'trainees.')
+            || str_starts_with($routeName, 'course-enrollments.')
+            || str_starts_with($routeName, 'training-sessions.')
+            || str_starts_with($routeName, 'courses.')
+            || str_starts_with($routeName, 'instructors.')
+            || str_starts_with($routeName, 'vehicles.')
+            || in_array($routeName, ['portal.trainee', 'portal.instructor'], true) => ['Driving School', 'department-driving'],
+        str_starts_with($routeName, 'payments.')
+            || str_starts_with($routeName, 'reports.')
+            || str_starts_with($routeName, 'announcements.')
+            || str_starts_with($routeName, 'users.') => ['Shared administration', 'department-shared'],
+        $routeName === 'portal.vmv' => ['About DCTR', 'department-shared'],
+        default => [$role === 'admin' ? 'School operations' : $me->role_label, 'department-shared'],
+    };
 
     // [label, icon, route name, active pattern, roles allowed]  (the administrator sees everything except personal portals)
     $nav = [
+        'About DCTR' => [
+            ['Vision Mission Values', 'bi-compass', 'portal.vmv', 'portal.vmv', ['admin', 'shs_staff', 'driving_staff', 'teacher', 'instructor', 'student', 'trainee']],
+        ],
         '' => [
             ['Dashboard', 'bi-speedometer2', 'dashboard', 'dashboard', ['shs_staff', 'driving_staff']],
-            ['My portal', 'bi-person-badge', 'portal.student', 'portal.student', ['student']],
-            ['My portal', 'bi-person-badge', 'portal.trainee', 'portal.trainee', ['trainee']],
+            ['Dashboard', 'bi-speedometer2', 'portal.student', 'portal.student', ['student']],
+            ['Announcements', 'bi-megaphone', 'portal.student.announcements', 'portal.student.announcements', ['student'], true],
+            ['Class Schedule', 'bi-calendar-week', 'portal.student.schedule', 'portal.student.schedule', ['student'], true],
+            ['Grades', 'bi-award', 'portal.student.grades', 'portal.student.grades', ['student'], true],
+            ['Payment History', 'bi-receipt', 'portal.student.payments', 'portal.student.payments', ['student'], true],
+            ['Dashboard', 'bi-speedometer2', 'portal.trainee', 'portal.trainee', ['trainee']],
+            ['Announcements', 'bi-megaphone', 'portal.trainee.announcements', 'portal.trainee.announcements', ['trainee'], true],
+            ['Upcoming Sessions', 'bi-calendar-week', 'portal.trainee.sessions', 'portal.trainee.sessions', ['trainee'], true],
+            ['Training Records', 'bi-journal-check', 'portal.trainee.records', 'portal.trainee.records', ['trainee'], true],
+            ['Payment History', 'bi-receipt', 'portal.trainee.payments', 'portal.trainee.payments', ['trainee'], true],
             ['My classes', 'bi-calendar3', 'portal.teacher', 'portal.teacher', ['teacher']],
             ['My sessions', 'bi-car-front', 'portal.instructor', 'portal.instructor', ['instructor']],
         ],
@@ -54,15 +87,16 @@
         : in_array($role, $roles, true);
 @endphp
 
+<a class="skip-link" href="#main-content">Skip to main content</a>
 <div class="topbar d-lg-none">
     <div class="topbar-brand">
         <img class="school-logo-small" src="{{ asset('images/dctr-logo.jpg') }}" alt="DCTR College &amp; Driving School logo">
         <strong>DCTR SMS</strong>
     </div>
-    <button class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" data-bs-target="#sidebar" aria-label="Toggle menu"><i class="bi bi-list"></i></button>
+    <button class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" data-bs-target="#sidebar" aria-controls="sidebar" aria-label="Toggle menu"><i class="bi bi-list" aria-hidden="true"></i></button>
 </div>
 
-<aside id="sidebar" class="sidebar collapse d-lg-flex">
+<aside id="sidebar" class="sidebar collapse d-lg-flex" aria-label="Primary navigation">
     <div class="brand">
         <img class="school-logo" src="{{ asset('images/dctr-logo.jpg') }}" alt="DCTR College &amp; Driving School logo">
         <div>
@@ -72,17 +106,29 @@
     </div>
     <div class="roadline"></div>
 
+    <nav aria-label="School modules">
     @foreach ($nav as $group => $items)
         @php $visible = array_filter($items, fn ($i) => $allowed($i[4])); @endphp
         @if ($visible)
-            @if ($group)<div class="nav-group">{{ $group }}</div>@endif
-            @foreach ($visible as [$label, $icon, $routeName, $pattern])
-                <a class="nav-link {{ request()->routeIs($pattern) ? 'active' : '' }}" href="{{ route($routeName) }}">
+            @if ($group)
+                @php
+                    $groupClass = match ($group) {
+                        'Senior High School' => 'department-shs',
+                        'Driving School' => 'department-driving',
+                        default => 'department-admin',
+                    };
+                @endphp
+                <div class="nav-group {{ $groupClass }}">{{ $group }}</div>
+            @endif
+            @foreach ($visible as $item)
+                @php [$label, $icon, $routeName, $pattern, $itemRoles, $subLink] = array_pad($item, 6, null); @endphp
+                <a class="nav-link {{ $subLink ? 'nav-sub-link' : '' }} {{ request()->routeIs($pattern) ? 'active' : '' }}" href="{{ route($routeName) }}">
                     <i class="bi {{ $icon }}"></i> {{ $label }}
                 </a>
             @endforeach
         @endif
     @endforeach
+    </nav>
 
     <div class="me">
         <div class="fw-semibold">{{ $me->name }}</div>
@@ -94,7 +140,11 @@
     </div>
 </aside>
 
-<main class="main">
+<main id="main-content" class="main" tabindex="-1">
+    <div class="workspace-bar" aria-label="Current workspace">
+        <span class="workspace-context {{ $workspace[1] }}">{{ $workspace[0] }}</span>
+        <span class="workspace-user">{{ $me->name }} &middot; {{ $me->role_label }}</span>
+    </div>
     @if (session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">{{ session('success') }}
             @if (session('receipt'))

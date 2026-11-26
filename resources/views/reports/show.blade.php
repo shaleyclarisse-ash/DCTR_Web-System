@@ -14,14 +14,14 @@
 <form method="GET" class="row g-2 mb-3 no-print" style="max-width:720px">
     @foreach ($filters as $f)
         <div class="col-sm">
-            <label class="form-label">{{ $f['label'] }}</label>
+            <label class="form-label" for="report-{{ $f['name'] }}">{{ $f['label'] }}</label>
             @if ($f['type'] === 'select')
-                <select name="{{ $f['name'] }}" class="form-select">
+                <select id="report-{{ $f['name'] }}" name="{{ $f['name'] }}" class="form-select">
                     <option value="">All</option>
                     @foreach ($f['options'] as $k => $v)<option value="{{ $k }}" @selected((string) $f['value'] === (string) $k)>{{ $v }}</option>@endforeach
                 </select>
             @else
-                <input type="{{ $f['type'] }}" name="{{ $f['name'] }}" value="{{ $f['value'] }}" class="form-control">
+                <input id="report-{{ $f['name'] }}" type="{{ $f['type'] }}" name="{{ $f['name'] }}" value="{{ $f['value'] }}" class="form-control">
             @endif
         </div>
     @endforeach
@@ -31,7 +31,7 @@
 
 <div class="panel table-responsive">
     <table class="table table-sm">
-        <thead><tr>@foreach ($headers as $h)<th>{{ $h }}</th>@endforeach</tr></thead>
+        <thead><tr>@foreach ($headers as $h)<th scope="col">{{ $h }}</th>@endforeach</tr></thead>
         <tbody>
         @forelse ($rows as $row)
             <tr @if (($row[3] ?? '') === 'TOTAL') class="fw-bold" @endif>@foreach ($row as $cell)<td>{{ $cell }}</td>@endforeach</tr>

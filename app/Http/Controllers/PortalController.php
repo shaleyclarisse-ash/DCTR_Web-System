@@ -18,7 +18,7 @@ class PortalController extends Controller
         return $schedules->sortBy(fn ($s) => [array_search($s->day, Options::DAYS), $s->start_time])->values();
     }
 
-    public function student()
+    public function student($page = 'dashboard')
     {
         $user    = auth()->user();
         $student = $user->student;
@@ -40,10 +40,16 @@ class PortalController extends Controller
                 : collect(),
             'payments'      => $student->payments()->latest('paid_at')->take(8)->get(),
             'announcements' => Announcement::visibleTo($user)->latest()->take(4)->get(),
+            'page'          => $page,
         ]);
     }
 
-    public function trainee()
+    public function studentAnnouncements() { return $this->student('announcements'); }
+    public function studentSchedule()     { return $this->student('schedule'); }
+    public function studentGrades()       { return $this->student('grades'); }
+    public function studentPayments()     { return $this->student('payments'); }
+
+    public function trainee($page = 'dashboard')
     {
         $user    = auth()->user();
         $trainee = $user->trainee;
@@ -61,8 +67,14 @@ class PortalController extends Controller
                 ->where('status', '!=', 'scheduled')->latest('session_date')->take(10)->get(),
             'payments'      => $trainee->payments()->latest('paid_at')->take(8)->get(),
             'announcements' => Announcement::visibleTo($user)->latest()->take(4)->get(),
+            'page'          => $page,
         ]);
     }
+
+    public function traineeAnnouncements() { return $this->trainee('announcements'); }
+    public function traineeSessions()      { return $this->trainee('sessions'); }
+    public function traineeRecords()       { return $this->trainee('records'); }
+    public function traineePayments()      { return $this->trainee('payments'); }
 
     public function teacher()
     {

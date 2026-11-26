@@ -36,10 +36,19 @@ Route::middleware('auth')->group(function () {
     Route::get('/password', [AuthController::class, 'showPassword'])->name('password.edit');
     Route::post('/password', [AuthController::class, 'updatePassword'])->name('password.update');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::view('/about/dctr', 'portal.vmv')->name('portal.vmv');
 
     // ---- Portals (role-restricted; the administrator can open all of them)
     Route::get('/portal/student', [PortalController::class, 'student'])->middleware('role:student')->name('portal.student');
+    Route::get('/portal/student/announcements', [PortalController::class, 'studentAnnouncements'])->middleware('role:student')->name('portal.student.announcements');
+    Route::get('/portal/student/schedule', [PortalController::class, 'studentSchedule'])->middleware('role:student')->name('portal.student.schedule');
+    Route::get('/portal/student/grades', [PortalController::class, 'studentGrades'])->middleware('role:student')->name('portal.student.grades');
+    Route::get('/portal/student/payments', [PortalController::class, 'studentPayments'])->middleware('role:student')->name('portal.student.payments');
     Route::get('/portal/trainee', [PortalController::class, 'trainee'])->middleware('role:trainee')->name('portal.trainee');
+    Route::get('/portal/trainee/announcements', [PortalController::class, 'traineeAnnouncements'])->middleware('role:trainee')->name('portal.trainee.announcements');
+    Route::get('/portal/trainee/sessions', [PortalController::class, 'traineeSessions'])->middleware('role:trainee')->name('portal.trainee.sessions');
+    Route::get('/portal/trainee/records', [PortalController::class, 'traineeRecords'])->middleware('role:trainee')->name('portal.trainee.records');
+    Route::get('/portal/trainee/payments', [PortalController::class, 'traineePayments'])->middleware('role:trainee')->name('portal.trainee.payments');
     Route::get('/portal/teacher', [PortalController::class, 'teacher'])->middleware('role:teacher')->name('portal.teacher');
     Route::middleware('role:instructor')->group(function () {
         Route::get('/portal/instructor', [PortalController::class, 'instructor'])->name('portal.instructor');

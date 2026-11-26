@@ -20,7 +20,7 @@
 
 <form method="GET" class="row g-2 mb-3" style="max-width:640px">
     <input type="hidden" name="type" value="{{ $type }}">
-    <div class="col-sm-6"><input type="search" name="q" value="{{ $term }}" class="form-control" placeholder="Search name..."></div>
+    <div class="col-sm-6"><label class="visually-hidden" for="payment-search">Search accounts by name</label><input id="payment-search" type="search" name="q" value="{{ $term }}" class="form-control" placeholder="Search name..."></div>
     <div class="col-sm-4">
         <select name="filter" class="form-select" onchange="this.form.submit()">
             <option value="">All accounts</option>
@@ -28,12 +28,13 @@
             <option value="settled" @selected($filter === 'settled')>Settled</option>
         </select>
     </div>
-    <div class="col-sm-2"><button class="btn btn-ink w-100"><i class="bi bi-search"></i></button></div>
+    <div class="col-sm-2"><button class="btn btn-ink w-100"><i class="bi bi-search" aria-hidden="true"></i><span class="ms-1">Search</span></button></div>
 </form>
 
+<p class="small text-secondary mb-2" role="status">{{ $accounts->total() }} {{ $accounts->total() === 1 ? 'account' : 'accounts' }}</p>
 <div class="panel table-responsive">
     <table class="table table-hover">
-        <thead><tr><th>Name</th><th class="text-end">Charges</th><th class="text-end">Paid</th><th class="text-end">Balance</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th scope="col">Name</th><th scope="col" class="text-end">Charges</th><th scope="col" class="text-end">Paid</th><th scope="col" class="text-end">Balance</th><th scope="col">Status</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
         <tbody>
         @forelse ($accounts as $a)
             @php $balance = (float) $a->total_charges - (float) $a->total_paid; @endphp
@@ -43,7 +44,7 @@
                 <td class="text-end">₱{{ number_format($a->total_paid, 2) }}</td>
                 <td class="text-end fw-semibold">₱{{ number_format($balance, 2) }}</td>
                 <td><span class="badge text-bg-{{ $balance > 0 ? 'warning' : 'success' }}">{{ $balance > 0 ? 'With balance' : 'Settled' }}</span></td>
-                <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ route('payments.account', [$type, $a->id]) }}">Open</a></td>
+                <td class="text-end"><a class="btn btn-sm btn-outline-primary" aria-label="Open account for {{ $a->full_name }}" href="{{ route('payments.account', [$type, $a->id]) }}">Open account</a></td>
             </tr>
         @empty
             <tr><td colspan="6" class="empty">No accounts found.</td></tr>

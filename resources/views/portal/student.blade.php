@@ -1,18 +1,41 @@
 @extends('layouts.app')
-@section('title', 'My portal')
+@php
+    $page = $page ?? 'dashboard';
+    $pageTitles = ['announcements' => 'Announcements', 'schedule' => 'Class Schedule', 'grades' => 'Grades', 'payments' => 'Payment History'];
+@endphp
+@section('title', $pageTitles[$page] ?? 'Dashboard')
 @section('content')
 @php
     $charged = $student->total_charges; $paid = $student->total_paid; $balance = $charged - $paid;
 @endphp
+@if ($page === 'dashboard')
+<section class="portal-hero portal-hero-shs" aria-labelledby="portal-title">
+    <div><div class="portal-kicker">Senior High School student</div>
+        <h1 id="portal-title">Welcome, {{ $student->first_name }}</h1>
+        <p>{{ $student->full_name }}
+            @if ($enrollment)<span class="portal-divider">·</span>{{ $enrollment->section->label }}<span class="portal-divider">·</span>SY {{ $enrollment->school_year }}, {{ $enrollment->semester }} semester @endif
+        </p>
+    </div>
+    <div class="portal-hero-icon" aria-hidden="true"><i class="bi bi-mortarboard"></i></div>
+</section>
+@else
 <div class="page-head">
-    <div><h1>{{ $student->first_name }} {{ $student->last_name }}</h1>
-        <div class="sub">LRN {{ $student->lrn ?: '-' }}
-            @if ($enrollment) &middot; {{ $enrollment->section->label }} &middot; SY {{ $enrollment->school_year }}, {{ $enrollment->semester }} Sem @endif</div></div>
+    <div><div class="sub">Senior High School student</div><h1>{{ $pageTitles[$page] ?? 'Dashboard' }}</h1></div>
+    <a class="btn btn-outline-secondary" href="{{ route('portal.student') }}"><i class="bi bi-speedometer2" aria-hidden="true"></i> Dashboard</a>
 </div>
+@endif
 
-@include('partials.announcements')
+@if (in_array($page, ['dashboard', 'announcements'], true))
+<div id="announcements" class="dashboard-anchor">@include('partials.announcements')</div>
+@if ($page === 'announcements' && $announcements->isEmpty())
+    <div class="panel empty">No announcements are available right now.</div>
+@endif
+@endif
 
-<div class="stat-strip">
+@if (in_array($page, ['dashboard', 'payments'], true))
+<section aria-labelledby="student-summary-title" class="portal-summary">
+    <div class="portal-section-head"><h2 id="student-summary-title">Your school snapshot</h2><span>Attendance and account</span></div>
+<div class="stat-strip portal-stat-strip">
     <div class="stat"><div class="num">₱{{ number_format($charged, 2) }}</div><div class="lbl">Total charges</div></div>
     <div class="stat"><div class="num">₱{{ number_format($paid, 2) }}</div><div class="lbl">Total paid</div></div>
     <div class="stat {{ $balance > 0 ? 'warn' : '' }}"><div class="num">₱{{ number_format($balance, 2) }}</div><div class="lbl">{{ $balance > 0 ? 'Remaining balance' : 'Settled' }}</div></div>
@@ -20,13 +43,16 @@
         <div class="stat"><div class="num">{{ $attendance[$k] ?? 0 }}</div><div class="lbl">{{ $v }} (days)</div></div>
     @endforeach
 </div>
+</section>
+@endif
 
 <div class="row g-3">
-    <div class="col-xl-6">
+    @if (in_array($page, ['dashboard', 'schedule'], true))
+    <div id="class-schedule" class="col-xl-6 dashboard-anchor">
         <div class="panel">
             <div class="panel-head"><h2>Class schedule</h2></div>
             <div class="table-responsive"><table class="table">
-                <thead><tr><th>Day</th><th>Time</th><th>Subject</th><th>Teacher</th><th>Room</th></tr></thead>
+                <thead><tr><th scope="col">Day</th><th scope="col">Time</th><th scope="col">Subject</th><th scope="col">Teacher</th><th scope="col">Room</th></tr></thead>
                 <tbody>
                 @forelse ($schedule as $s)
                     <tr><td>{{ $s->day }}</td><td>{{ $s->time_range }}</td><td>{{ $s->subject->name }}</td><td>{{ $s->teacher->name ?? '-' }}</td><td>{{ $s->room ?: '-' }}</td></tr>
@@ -37,11 +63,13 @@
             </table></div>
         </div>
     </div>
-    <div class="col-xl-6">
+    @endif
+    @if (in_array($page, ['dashboard', 'grades'], true))
+    <div id="grades" class="col-xl-6 dashboard-anchor">
         <div class="panel">
             <div class="panel-head"><h2>Grades</h2></div>
             <div class="table-responsive"><table class="table">
-                <thead><tr><th>Subject</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Average</th></tr></thead>
+                <thead><tr><th scope="col">Subject</th><th scope="col">Q1</th><th scope="col">Q2</th><th scope="col">Q3</th><th scope="col">Q4</th><th scope="col">Average</th></tr></thead>
                 <tbody>
                 @forelse ($grades as $set)
                     @php $by = $set->keyBy('period'); $avg = $set->avg('grade'); @endphp
@@ -55,11 +83,13 @@
             </table></div>
         </div>
     </div>
-    <div class="col-12">
+    @endif
+    @if (in_array($page, ['dashboard', 'payments'], true))
+    <div id="payment-history" class="col-12 dashboard-anchor">
         <div class="panel">
             <div class="panel-head"><h2>Recent payments</h2></div>
             <div class="table-responsive"><table class="table">
-                <thead><tr><th>OR no.</th><th>Date</th><th>Method</th><th class="text-end">Amount</th></tr></thead>
+                <thead><tr><th scope="col">OR no.</th><th scope="col">Date</th><th scope="col">Method</th><th scope="col" class="text-end">Amount</th></tr></thead>
                 <tbody>
                 @forelse ($payments as $p)
                     <tr><td>{{ $p->or_number }}</td><td>{{ $p->paid_at->format('M d, Y') }}</td><td>{{ strtoupper($p->method) }}</td><td class="text-end">₱{{ number_format($p->amount, 2) }}</td></tr>
@@ -70,5 +100,6 @@
             </table></div>
         </div>
     </div>
+    @endif
 </div>
 @endsection
