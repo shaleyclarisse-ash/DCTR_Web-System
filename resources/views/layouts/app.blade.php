@@ -10,7 +10,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
 </head>
-<body>
+<body class="app-shell">
 @php
     $me   = auth()->user();
     $role = $me->role;
@@ -88,13 +88,34 @@
 @endphp
 
 <a class="skip-link" href="#main-content">Skip to main content</a>
-<div class="topbar d-lg-none">
-    <div class="topbar-brand">
+<header class="topbar">
+    <button class="btn btn-sm btn-outline-primary d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar" aria-controls="sidebar" aria-expanded="false" aria-label="Toggle navigation"><i class="bi bi-list" aria-hidden="true"></i></button>
+    <div class="topbar-brand d-lg-none">
         <img class="school-logo-small" src="{{ asset('images/dctr-logo.jpg') }}" alt="DCTR College &amp; Driving School logo">
         <strong>DCTR SMS</strong>
     </div>
-    <button class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" data-bs-target="#sidebar" aria-controls="sidebar" aria-label="Toggle menu"><i class="bi bi-list" aria-hidden="true"></i></button>
-</div>
+    <span class="workspace-context {{ $workspace[1] }} d-none d-lg-inline-flex">{{ $workspace[0] }}</span>
+    <div class="dropdown account-dropdown">
+        <button id="account-menu-toggle" class="btn account-toggle dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Account menu for {{ $me->name }}">
+            <i class="bi bi-person-circle" aria-hidden="true"></i>
+            <span class="account-name d-none d-sm-inline-block">{{ $me->name }}</span>
+        </button>
+        <div class="dropdown-menu dropdown-menu-end account-menu" aria-labelledby="account-menu-toggle">
+            <div class="account-details">
+                <div class="fw-semibold">{{ $me->name }}</div>
+                <div class="small text-secondary">{{ $me->email }}</div>
+                <div class="small text-secondary">{{ $me->role_label }}</div>
+            </div>
+            <hr class="dropdown-divider">
+            <a class="dropdown-item" href="{{ route('password.edit') }}"><i class="bi bi-key me-2" aria-hidden="true"></i>Change password</a>
+            <hr class="dropdown-divider">
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right me-2" aria-hidden="true"></i>Log out</button>
+            </form>
+        </div>
+    </div>
+</header>
 
 <aside id="sidebar" class="sidebar collapse d-lg-flex" aria-label="Primary navigation">
     <div class="brand">
@@ -104,7 +125,6 @@
             <small>College &amp; Driving School, Inc.<br>School and Driving Training Management</small>
         </div>
     </div>
-    <div class="roadline"></div>
 
     <nav aria-label="School modules">
     @foreach ($nav as $group => $items)
@@ -122,7 +142,7 @@
             @endif
             @foreach ($visible as $item)
                 @php [$label, $icon, $routeName, $pattern, $itemRoles, $subLink] = array_pad($item, 6, null); @endphp
-                <a class="nav-link {{ $subLink ? 'nav-sub-link' : '' }} {{ request()->routeIs($pattern) ? 'active' : '' }}" href="{{ route($routeName) }}">
+                <a class="nav-link {{ $subLink ? 'nav-sub-link' : '' }} {{ request()->routeIs($pattern) ? 'active' : '' }}" href="{{ route($routeName) }}" @if (request()->routeIs($pattern)) aria-current="page" @endif>
                     <i class="bi {{ $icon }}"></i> {{ $label }}
                 </a>
             @endforeach
@@ -130,20 +150,11 @@
     @endforeach
     </nav>
 
-    <div class="me">
-        <div class="fw-semibold">{{ $me->name }}</div>
-        <div class="role mb-2">{{ $me->role_label }}</div>
-        <a class="d-block text-decoration-none small text-white-50" href="{{ route('password.edit') }}"><i class="bi bi-key"></i> Change password</a>
-        <form method="POST" action="{{ route('logout') }}">@csrf
-            <button class="btn btn-sm btn-outline-light w-100 mt-2"><i class="bi bi-box-arrow-right"></i> Log out</button>
-        </form>
-    </div>
 </aside>
 
 <main id="main-content" class="main" tabindex="-1">
-    <div class="workspace-bar" aria-label="Current workspace">
+    <div class="workspace-bar d-lg-none" aria-label="Current workspace">
         <span class="workspace-context {{ $workspace[1] }}">{{ $workspace[0] }}</span>
-        <span class="workspace-user">{{ $me->name }} &middot; {{ $me->role_label }}</span>
     </div>
     @if (session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">{{ session('success') }}

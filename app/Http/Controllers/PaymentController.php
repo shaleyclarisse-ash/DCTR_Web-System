@@ -37,18 +37,20 @@ class PaymentController extends Controller
 
     public function index(Request $request)
     {
-        $type   = $this->allowedType($request->query('type'));
-        $class  = Relation::getMorphedModel($type);
-        $table  = app($class)->getTable();
-        $term   = trim((string) $request->query('q', ''));
+        $type = $this->allowedType($request->query('type'));
+        $class = Relation::getMorphedModel($type);
+        $query = $class::query();
+        $table = $query->getModel()->getTable();
+        $term = trim((string) $request->query('q', ''));
         $filter = $request->query('filter');
 
-        $query = $class::query()
-            ->withSum('charges as total_charges', 'amount')
-            ->withSum('payments as total_paid', 'amount');
+        $query->withSum('charges as charges_total', 'amount')
+            ->withSum('payments as payments_total', 'amount');
 
-        if ($term !== '') {
-            $query->where(fn ($w) => $w->where('first_name', 'like', "%{$term}%")->orWhere('last_name', 'like', "%{$term}%"));
+        foreach (preg_split('/[\s,]+/', $term, -1, PREG_SPLIT_NO_EMPTY) as $namePart) {
+            $query->where(fn ($names) => $names->where('first_name', 'like', "%{$namePart}%")
+                ->orWhere('middle_name', 'like', "%{$namePart}%")
+                ->orWhere('last_name', 'like', "%{$namePart}%"));
         }
 
         $due = "(select coalesce(sum(amount),0) from charges where charges.payable_type = ? and charges.payable_id = {$table}.id)"
@@ -61,11 +63,11 @@ class PaymentController extends Controller
         }
 
         return view('payments.index', [
-            'type'     => $type,
-            'term'     => $term,
-            'filter'   => $filter,
-            'accounts' => $query->orderBy('last_name')->paginate(15)->withQueryString(),
-            'charged'  => (float) Charge::where('payable_type', $type)->sum('amount'),
+            'type' => $type,
+            'term' => $term,
+            'filter' => $filter,
+            'accounts' => $query->orderBy('last_name')->orderBy('first_name')->orderBy('id')->paginate(15)->withQueryString(),
+            'charged' => (float) Charge::where('payable_type', $type)->sum('amount'),
             'collected' => (float) Payment::where('payable_type', $type)->sum('amount'),
         ]);
     }
@@ -75,11 +77,11 @@ class PaymentController extends Controller
         $owner = $this->owner($type, $id);
 
         return view('payments.account', [
-            'type'     => $type,
-            'owner'    => $owner,
-            'charges'  => $owner->charges()->latest()->get(),
+            'type' => $type,
+            'owner' => $owner,
+            'charges' => $owner->charges()->latest()->get(),
             'payments' => $owner->payments()->with('receiver')->latest('paid_at')->latest('id')->get(),
-            'nextOr'   => 'OR-'.date('Y').'-'.str_pad((string) (Payment::max('id') + 1), 5, '0', STR_PAD_LEFT),
+            'nextOr' => 'OR-'.date('Y').'-'.str_pad((string) (Payment::max('id') + 1), 5, '0', STR_PAD_LEFT),
         ]);
     }
 
@@ -89,8 +91,8 @@ class PaymentController extends Controller
 
         $data = $request->validate([
             'description' => 'required|string|max:255',
-            'amount'      => 'required|numeric|min:0.01|max:9999999',
-            'due_date'    => 'nullable|date',
+            'amount' => 'required|numeric|min:0.01|max:9999999',
+            'due_date' => 'nullable|date',
         ]);
 
         $owner->charges()->create($data);
@@ -100,7 +102,7 @@ class PaymentController extends Controller
 
     public function storePayment(Request $request, string $type, int $id)
     {
-        $owner   = $this->owner($type, $id);
+        $owner = $this->owner($type, $id);
         $balance = round($owner->balance, 2);
 
         if ($balance <= 0) {
@@ -109,10 +111,10 @@ class PaymentController extends Controller
 
         $data = $request->validate([
             'or_number' => 'required|string|max:30|unique:payments,or_number',
-            'amount'    => ['required', 'numeric', 'min:0.01', "max:{$balance}"],
-            'method'    => 'required|in:cash,gcash,bank,other',
-            'paid_at'   => 'required|date',
-            'remarks'   => 'nullable|string|max:255',
+            'amount' => ['required', 'numeric', 'min:0.01', "max:{$balance}"],
+            'method' => 'required|in:cash,gcash,bank,other',
+            'paid_at' => 'required|date',
+            'remarks' => 'nullable|string|max:255',
         ], ['amount.max' => 'The amount cannot be more than the remaining balance (₱'.number_format($balance, 2).').']);
 
         $payment = $owner->payments()->create($data + ['received_by' => auth()->id()]);

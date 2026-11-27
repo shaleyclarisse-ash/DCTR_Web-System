@@ -5,9 +5,9 @@
 @endphp
 @section('title', $pageTitles[$page] ?? 'Dashboard')
 @section('content')
-@php
-    $charged = $student->total_charges; $paid = $student->total_paid; $balance = $charged - $paid;
-@endphp
+@if (in_array($page, ['announcements', 'schedule', 'grades'], true))
+    @include('portal.student-records.'.$page)
+@else
 @if ($page === 'dashboard')
 <section class="portal-hero portal-hero-shs" aria-labelledby="portal-title">
     <div><div class="portal-kicker">Senior High School student</div>
@@ -25,29 +25,34 @@
 </div>
 @endif
 
-@if (in_array($page, ['dashboard', 'announcements'], true))
+@if ($page === 'dashboard')
 <div id="announcements" class="dashboard-anchor">@include('partials.announcements')</div>
-@if ($page === 'announcements' && $announcements->isEmpty())
-    <div class="panel empty">No announcements are available right now.</div>
-@endif
 @endif
 
 @if (in_array($page, ['dashboard', 'payments'], true))
+@php
+    $charged = $student->total_charges; $paid = $student->total_paid; $balance = $charged - $paid;
+@endphp
 <section aria-labelledby="student-summary-title" class="portal-summary">
-    <div class="portal-section-head"><h2 id="student-summary-title">Your school snapshot</h2><span>Attendance and account</span></div>
+    <div class="portal-section-head">
+        <h2 id="student-summary-title">{{ $page === 'payments' ? 'Payment summary' : 'Your school snapshot' }}</h2>
+        @if ($page === 'dashboard')<span>Attendance and account</span>@endif
+    </div>
 <div class="stat-strip portal-stat-strip">
     <div class="stat"><div class="num">₱{{ number_format($charged, 2) }}</div><div class="lbl">Total charges</div></div>
     <div class="stat"><div class="num">₱{{ number_format($paid, 2) }}</div><div class="lbl">Total paid</div></div>
     <div class="stat {{ $balance > 0 ? 'warn' : '' }}"><div class="num">₱{{ number_format($balance, 2) }}</div><div class="lbl">{{ $balance > 0 ? 'Remaining balance' : 'Settled' }}</div></div>
-    @foreach (['present' => 'Present', 'absent' => 'Absent', 'late' => 'Late'] as $k => $v)
-        <div class="stat"><div class="num">{{ $attendance[$k] ?? 0 }}</div><div class="lbl">{{ $v }} (days)</div></div>
-    @endforeach
+    @if ($page === 'dashboard')
+        @foreach (['present' => 'Present', 'absent' => 'Absent', 'late' => 'Late'] as $k => $v)
+            <div class="stat"><div class="num">{{ $attendance[$k] ?? 0 }}</div><div class="lbl">{{ $v }} (days)</div></div>
+        @endforeach
+    @endif
 </div>
 </section>
 @endif
 
 <div class="row g-3">
-    @if (in_array($page, ['dashboard', 'schedule'], true))
+    @if ($page === 'dashboard')
     <div id="class-schedule" class="col-xl-6 dashboard-anchor">
         <div class="panel">
             <div class="panel-head"><h2>Class schedule</h2></div>
@@ -64,7 +69,7 @@
         </div>
     </div>
     @endif
-    @if (in_array($page, ['dashboard', 'grades'], true))
+    @if ($page === 'dashboard')
     <div id="grades" class="col-xl-6 dashboard-anchor">
         <div class="panel">
             <div class="panel-head"><h2>Grades</h2></div>
@@ -102,4 +107,5 @@
     </div>
     @endif
 </div>
+@endif
 @endsection

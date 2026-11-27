@@ -20,27 +20,34 @@ class PortalController extends Controller
 
     public function student($page = 'dashboard')
     {
-        $user    = auth()->user();
+        $user = auth()->user();
         $student = $user->student;
         abort_unless($student, 404, 'No student record is linked to this account.');
 
         $enrollment = $student->enrollments()->with('section')->latest('id')->first();
+        $announcements = Announcement::visibleTo($user)->latest()->latest('id');
 
         return view('portal.student', [
-            'student'       => $student,
-            'enrollment'    => $enrollment,
-            'schedule'      => $enrollment
+            'student' => $student,
+            'enrollment' => $enrollment,
+            'schedule' => $enrollment && in_array($page, ['dashboard', 'schedule'], true)
                 ? $this->sortByDay(ClassSchedule::with('subject', 'teacher')->where('section_id', $enrollment->section_id)->get())
                 : collect(),
-            'grades'        => $enrollment
+            'grades' => $enrollment && in_array($page, ['dashboard', 'grades'], true)
                 ? Grade::with('subject')->where('enrollment_id', $enrollment->id)->get()->groupBy('subject_id')
                 : collect(),
-            'attendance'    => $enrollment
+            'attendance' => $enrollment && $page === 'dashboard'
                 ? StudentAttendance::where('enrollment_id', $enrollment->id)->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status')
                 : collect(),
-            'payments'      => $student->payments()->latest('paid_at')->take(8)->get(),
-            'announcements' => Announcement::visibleTo($user)->latest()->take(4)->get(),
-            'page'          => $page,
+            'payments' => in_array($page, ['dashboard', 'payments'], true)
+                ? $student->payments()->latest('paid_at')->take(8)->get()
+                : collect(),
+            'announcements' => match ($page) {
+                'announcements' => $announcements->paginate(8),
+                'dashboard' => $announcements->take(4)->get(),
+                default => collect(),
+            },
+            'page' => $page,
         ]);
     }
 

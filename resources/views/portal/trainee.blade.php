@@ -65,7 +65,10 @@
 
 @if (in_array($page, ['dashboard', 'payments'], true))
 <section aria-labelledby="trainee-summary-title" class="portal-summary">
-<div class="portal-section-head"><h2 id="trainee-summary-title">Your account</h2><span>Training fees and payments</span></div>
+<div class="portal-section-head">
+    <h2 id="trainee-summary-title">{{ $page === 'payments' ? 'Payment summary' : 'Your account' }}</h2>
+    @if ($page === 'dashboard')<span>Training fees and payments</span>@endif
+</div>
 <div class="stat-strip portal-stat-strip">
     <div class="stat"><div class="num">₱{{ number_format($trainee->total_charges, 2) }}</div><div class="lbl">Total charges</div></div>
     <div class="stat"><div class="num">₱{{ number_format($trainee->total_paid, 2) }}</div><div class="lbl">Total paid</div></div>
@@ -94,7 +97,7 @@
     </div>
     @endif
     @if (in_array($page, ['dashboard', 'payments'], true))
-    <div id="payment-history" class="col-xl-6 dashboard-anchor">
+    <div id="payment-history" class="{{ $page === 'payments' ? 'col-12' : 'col-xl-6' }} dashboard-anchor">
         <div class="panel">
             <div class="panel-head"><h2>Recent payments</h2></div>
             <div class="table-responsive"><table class="table">

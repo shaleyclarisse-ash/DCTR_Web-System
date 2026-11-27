@@ -10,29 +10,26 @@
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
 </head>
 <body class="login-page">
-<div class="login-wrap">
+<main class="login-wrap">
     <section class="login-side">
         <div class="login-brand">
             <img class="login-logo" src="{{ asset('images/dctr-logo.jpg') }}" alt="Dela Calzada Tanchado Rioja College and Driving School seal">
             <div class="login-brand-name">DCTR <span>COLLEGE &amp; DRIVING SCHOOL</span></div>
         </div>
         <div class="login-brand-copy">
-            <div class="login-kicker">Digos City · Since 2019</div>
-            <h1>Learn with confidence.<br>Drive toward what’s next.</h1>
-            <p>Welcome to the DCTR school and driving training management system.</p>
+            <h1>School and Driving Training Portal</h1>
+            <p>Access your DCTR account for Senior High School or Driving School.</p>
         </div>
         <div class="login-departments" aria-label="DCTR departments">
             <span><i class="bi bi-mortarboard" aria-hidden="true"></i> Senior High School</span>
             <span><i class="bi bi-sign-turn-right" aria-hidden="true"></i> Driving School</span>
         </div>
-        <div class="login-road" aria-hidden="true"><span></span></div>
     </section>
     <section class="login-form">
         <form class="box" method="POST" action="{{ route('login') }}">
             @csrf
             <div class="login-form-heading">
                 <div class="login-form-icon" aria-hidden="true"><i class="bi bi-person-lock"></i></div>
-                <div class="login-kicker">DCTR portal</div>
                 <h2 class="h3 fw-bold mb-2">Welcome back</h2>
                 <p>Sign in to continue to your account.</p>
             </div>
@@ -51,9 +48,8 @@
                 <label class="form-check-label" for="remember">Keep me logged in</label>
             </div>
             <button class="btn btn-accent w-100 py-2 login-submit">Log in <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></button>
-            <div class="login-secure"><i class="bi bi-shield-lock" aria-hidden="true"></i> Sign in with your DCTR account</div>
         </form>
     </section>
-</div>
+</main>
 </body>
 </html>
